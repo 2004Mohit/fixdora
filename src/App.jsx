@@ -23,6 +23,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { categories, products, brands } from "./data.js";
+import { Analytics } from "@vercel/analytics/react";
 import { supabase } from "./lib/supabase.js";
 
 const icons = {
