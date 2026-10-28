@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 import {
   ArrowRight,
   ArrowUpRight,
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 import { categories, products, brands } from "./data.js";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { supabase } from "./lib/supabase.js";
 
 const icons = {
@@ -55,6 +57,16 @@ export default function App() {
   const [interestStatus, setInterestStatus] = useState("");
   const [interestLoading, setInterestLoading] = useState(false);
   const [bagMessage, setBagMessage] = useState("");
+  const categoryNavRef = useRef(null);
+
+  const scrollCategories = (direction) => {
+    if (!categoryNavRef.current) return;
+
+    categoryNavRef.current.scrollBy({
+      left: direction * 250,
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     const openInterest = () => {
@@ -303,25 +315,48 @@ export default function App() {
         </div>
       </header>
 
-      <nav className={`category-nav ${mobileNav ? "nav-open" : ""}`}>
-        {categories.map((category) => {
-          const Icon = icons[category.id] || Settings;
-          return (
-            <button
-              key={category.id}
-              className={
-                activeCategory === category.id
-                  ? "category-nav-item active"
-                  : "category-nav-item"
-              }
-              onClick={() => chooseCategory(category.id)}
-            >
-              <Icon size={16} />
-              {category.name}
-            </button>
-          );
-        })}
-      </nav>
+      <div className={`category-nav-shell ${mobileNav ? "nav-open" : ""}`}>
+        <button
+          type="button"
+          className="category-slider-arrow category-slider-left"
+          onClick={() => scrollCategories(-1)}
+          aria-label="Scroll categories left"
+        >
+          <ArrowRight size={17} style={{ transform: "rotate(180deg)" }} />
+        </button>
+
+        <nav className="category-nav" ref={categoryNavRef}>
+          {categories
+            .filter((category) => category.id !== "all")
+            .map((category) => {
+              const Icon = icons[category.id] || Settings;
+
+              return (
+                <button
+                  key={category.id}
+                  className={
+                    activeCategory === category.id
+                      ? "category-nav-item active"
+                      : "category-nav-item"
+                  }
+                  onClick={() => chooseCategory(category.id)}
+                >
+                  <Icon size={18} />
+                  <span>{category.name}</span>
+                </button>
+              );
+            })}
+        </nav>
+
+        <button
+          type="button"
+          className="category-slider-arrow category-slider-right"
+          onClick={() => scrollCategories(1)}
+          aria-label="Scroll categories right"
+        >
+          <ArrowRight size={17} />
+        </button>
+      </div>
 
       <main>
         <section className="hero container">
@@ -525,7 +560,6 @@ export default function App() {
                           }
                         />
                       </button>
-                      <span className="product-id">{product.id}</span>
                     </div>
                     <div className="product-details">
                       <span className="product-category">
@@ -1008,6 +1042,8 @@ export default function App() {
           </aside>
         </div>
       )}
+      <SpeedInsights />
+      <Analytics />
     </div>
   );
 }
